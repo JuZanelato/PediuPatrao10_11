@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Auditoria</title>
+</head>
+<body>
+
+<div th:fragment="content">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="fw-bold mb-0">
+            <i class="bi bi-journal-check me-2 text-primary"></i>Auditoria
+        </h2>
+        <span class="badge bg-secondary">Somente leitura · ADMIN e GERENTE</span>
+    </div>
+
+    <form th:action="@{/auditoria}" method="get" class="card card-body shadow-sm mb-3">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-2">
+                <label class="form-label small" for="entidade">Entidade</label>
+                <select id="entidade" name="entidade" class="form-select form-select-sm">
+                    <option value="">Todas</option>
+                    <option th:each="e : ${ {'Pedido','Cliente','Usuario','Sistema'} }" th:value="${e}" th:text="${e}"
+                            th:selected="${e == filtroEntidade}"></option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small" for="operacao">Operação</label>
+                <select id="operacao" name="operacao" class="form-select form-select-sm">
+                    <option value="">Todas</option>
+                    <option th:each="op : ${operacoes}" th:value="${op.name()}" th:text="${op.descricao}"
+                            th:selected="${op == filtroOperacao}"></option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small" for="usuario">Usuário</label>
+                <input id="usuario" name="usuario" class="form-control form-control-sm" th:value="${filtroUsuario}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small" for="entidadeId">ID do registro</label>
+                <input id="entidadeId" name="entidadeId" class="form-control form-control-sm" th:value="${filtroEntidadeId}">
+            </div>
+            <div class="col-md-2 d-flex gap-1">
+                <button type="submit" class="btn btn-sm btn-primary w-100"><i class="bi bi-funnel"></i> Filtrar</button>
+                <a th:href="@{/auditoria}" class="btn btn-sm btn-outline-secondary">Limpar</a>
+            </div>
+        </div>
+    </form>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0 table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="ps-3">Data e hora</th>
+                        <th>Usuário</th>
+                        <th>Operação</th>
+                        <th>Entidade / ID</th>
+                        <th>Campo alterado</th>
+                        <th>Valor anterior</th>
+                        <th>Novo valor</th>
+                        <th>Justificativa / detalhe</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:if="${#lists.isEmpty(registros)}">
+                        <td colspan="8" class="text-center text-muted py-5">Nenhum registro encontrado.</td>
+                    </tr>
+                    <tr th:each="r : ${registros}">
+                        <td class="ps-3 text-nowrap" th:text="${r.dataHora != null} ? ${#temporals.format(r.dataHora, 'dd/MM/yyyy — HH:mm:ss')} : '—'"></td>
+                        <td>
+                            <span th:text="${r.usuario}"></span><br>
+                            <span class="badge bg-light text-dark" th:text="${r.perfil}"></span>
+                        </td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${r.operacao == 'ACESSO_NEGADO' or r.operacao == 'CANCELAMENTO_PEDIDO'} ? 'bg-danger' :
+                                                  (${r.operacao == 'DESCONTO_PEDIDO'} ? 'bg-warning text-dark' : 'bg-primary')"
+                                  th:text="${r.operacaoDescricao}"></span>
+                        </td>
+                        <td class="small">
+                            <span th:text="${r.entidade}"></span><br>
+                            <code th:text="${r.entidadeId}"></code>
+                        </td>
+                        <td class="small">
+                            <div th:each="a : ${r.alteracoes}" th:text="${a.campo}"></div>
+                        </td>
+                        <td class="small text-muted">
+                            <div th:each="a : ${r.alteracoes}" th:text="${a.valorAnterior != null} ? ${a.valorAnterior} : '—'"></div>
+                        </td>
+                        <td class="small">
+                            <div th:each="a : ${r.alteracoes}" th:text="${a.valorNovo != null} ? ${a.valorNovo} : '—'"></div>
+                        </td>
+                        <td class="small">
+                            <div th:if="${r.justificativa}"><strong>Justificativa:</strong> <span th:text="${r.justificativa}"></span></div>
+                            <div th:if="${r.detalhe}" class="text-muted" th:text="${r.detalhe}"></div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="card-footer small text-muted">
+            Exibindo até 500 registros mais recentes. Telefones são exibidos parcialmente para proteger dados pessoais.
+            Senhas e credenciais nunca são registradas.
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

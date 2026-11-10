@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Home</title>
+</head>
+<body>
+
+<div class="container-fluid vh-100 d-flex justify-content-center align-items-center" th:fragment="content">
+    <div class="text-center">
+        <h1>Bem-vindo, <span th:text="${usuarioLogado}">usuário</span>!</h1>
+        <p class="lead">Perfil: <strong th:text="${perfilLogado}">PERFIL</strong></p>
+        <img th:src="@{/images/logo.png}" alt="Logo" width="400" height="400">
+    </div>
+</div>
+
+</body>
+</html>

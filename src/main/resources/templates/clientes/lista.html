@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Lista de Clientes</title>
+</head>
+<body>
+<div th:fragment="content">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0">
+            <i class="bi bi-person-raised-hand me-2 text-primary"></i>Clientes
+        </h2>
+
+        <a th:href="@{/clientes/novo}" class="btn btn-primary" th:if="${perfilLogado == 'ATENDENTE'}">
+            <i class="bi bi-plus-lg me-1"></i> Novo Cliente
+        </a>
+    </div>
+
+    <div class="alert alert-success alert-dismissible fade show" th:if="${sucesso}" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i><span th:text="${sucesso}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div class="alert alert-danger alert-dismissible fade show" th:if="${erro}" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i><span th:text="${erro}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div id="clientes-msg"></div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Nome</th>
+                        <th>Telefone</th>
+                        <th>Endereço</th>
+                        <th class="text-end pe-4">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="clientes-tabela"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="clientes-app" th:data-perfil="${perfilLogado}"></div>
+
+    <script>
+        (function () {
+            const API_URL = '/api/clientes';
+            const perfil = document.getElementById('clientes-app').dataset.perfil;
+            const tabela = document.getElementById('clientes-tabela');
+
+            function mensagem(texto, tipo) {
+                document.getElementById('clientes-msg').innerHTML =
+                    `<div class="alert alert-${tipo}">${esc(texto)}</div>`;
+            }
+
+            function formatarEndereco(c) {
+                const partes = [c.logradouro, c.numero, c.complemento, c.bairro, c.cidade, c.estado]
+                    .filter(p => p && p.trim() !== '');
+                return partes.length > 0 ? partes.join(', ') : (c.endereco || '—');
+            }
+
+            async function carregarClientes() {
+                try {
+                    const clientes = await apiFetch(API_URL);
+                    tabela.innerHTML = '';
+                    if (clientes.length === 0) {
+                        tabela.innerHTML = `<tr><td colspan="4" class="text-center text-muted py-5">
+                            <i class="bi bi-inbox fs-3 d-block mb-2"></i>Nenhum cliente cadastrado.</td></tr>`;
+                        return;
+                    }
+                    clientes.forEach(c => {
+                        let acoes = '';
+                        if (perfil === 'ATENDENTE') {
+                            acoes += `<a href="/clientes/editar/${encodeURIComponent(c.id)}" class="btn btn-sm btn-outline-primary me-1">
+                                        <i class="bi bi-pencil-fill"></i> Editar</a>`;
+                        }
+                        if (perfil === 'GERENTE') {
+                            acoes += `<button class="btn btn-sm btn-outline-danger" data-excluir="${esc(c.id)}">
+                                        <i class="bi bi-trash-fill"></i> Excluir</button>`;
+                        }
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${esc(c.nome) || '—'}</td>
+                            <td>${esc(c.telefone) || '—'}</td>
+                            <td>${esc(formatarEndereco(c))}</td>
+                            <td class="text-end pe-4">${acoes || '<span class="text-muted small">somente consulta</span>'}</td>`;
+                        tabela.appendChild(row);
+                    });
+                } catch (e) {
+                    mensagem(e.message, 'danger');
+                }
+            }
+
+            tabela.addEventListener('click', async (ev) => {
+                const btn = ev.target.closest('[data-excluir]');
+                if (!btn) return;
+                if (!confirm('Tem certeza que deseja excluir este cliente?')) return;
+                try {
+                    await apiFetch(`${API_URL}/${encodeURIComponent(btn.dataset.excluir)}`, { method: 'DELETE' });
+                    mensagem('Cliente excluído com sucesso! (registrado na auditoria)', 'success');
+                    carregarClientes();
+                } catch (e) {
+                    mensagem(e.message, 'danger');
+                }
+            });
+
+            carregarClientes();
+        })();
+    </script>
+</div>
+</body>
+</html>

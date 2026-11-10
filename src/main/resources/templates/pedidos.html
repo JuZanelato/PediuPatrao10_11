@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Pedidos</title>
+</head>
+<body>
+
+<div th:fragment="content">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold mb-0">
+            <i class="bi bi-bag me-2 text-primary"></i>Pedidos
+        </h2>
+        <button class="btn btn-primary" id="btnNovoPedido"
+                th:if="${perfilLogado == 'ATENDENTE' or perfilLogado == 'GERENTE'}">
+            <i class="bi bi-plus-lg me-1"></i> Novo Pedido
+        </button>
+    </div>
+
+    <div id="pedidos-msg"></div>
+
+    <div class="card shadow-sm mb-4 d-none" id="cardNovoPedido">
+        <div class="card-body">
+            <h5 class="card-title mb-3">Registrar entrada de pedido</h5>
+            <form id="formPedido">
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium" for="clienteId">Cliente</label>
+                        <select id="clienteId" class="form-select" required></select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label fw-medium d-block">Tipo</label>
+                        <div class="form-check form-check-inline mt-2">
+                            <input class="form-check-input" type="radio" name="tipoEntrega" id="tipoEntrega1" value="ENTREGA" checked>
+                            <label class="form-check-label" for="tipoEntrega1">Entrega</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                            <input class="form-check-input" type="radio" name="tipoEntrega" id="tipoEntrega2" value="RETIRADA">
+                            <label class="form-check-label" for="tipoEntrega2">Retirada no balcão</label>
+                        </div>
+                    </div>
+                </div>
+
+                <label class="form-label fw-medium">Itens</label>
+                <div id="itensPedido"></div>
+                <button type="button" class="btn btn-sm btn-outline-secondary mb-3" id="btnAddItem">
+                    <i class="bi bi-plus"></i> Adicionar item
+                </button>
+
+                <div class="mb-3">
+                    <label class="form-label fw-medium" for="observacao">Observação</label>
+                    <input type="text" id="observacao" class="form-control" maxlength="300" placeholder="Ex.: sem cebola">
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        Estimativa: <strong id="estimativa">R$ 0,00</strong>
+                        <small class="text-muted d-block">O valor oficial é calculado pelo servidor com os preços do cadastro.</small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-outline-secondary" id="btnCancelarForm">Fechar</button>
+                        <button type="submit" class="btn btn-success"><i class="bi bi-check-lg"></i> Registrar pedido</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0 table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="ps-3">Pedido</th>
+                        <th>Cliente</th>
+                        <th>Itens</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Entrada</th>
+                        <th>Saída</th>
+                        <th class="text-end pe-3">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="pedidos-tabela"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalCancelar" tabindex="-1">
+        <div class="modal-dialog">
+            <form class="modal-content" id="formCancelar">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cancelar pedido</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="small text-muted">O cancelamento é definitivo: o pedido não poderá mais ser alterado.</p>
+                    <label class="form-label" for="justificativa">Justificativa (mínimo 10 caracteres)</label>
+                    <textarea id="justificativa" class="form-control" rows="3" maxlength="500" required></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Voltar</button>
+                    <button type="submit" class="btn btn-danger">Confirmar cancelamento</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalDesconto" tabindex="-1">
+        <div class="modal-dialog">
+            <form class="modal-content" id="formDesconto">
+                <div class="modal-header">
+                    <h5 class="modal-title">Aplicar desconto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label" for="percentual">Percentual (máximo 20%)</label>
+                    <div class="input-group mb-3">
+                        <input type="number" id="percentual" class="form-control" min="0.01" max="20" step="0.01" required>
+                        <span class="input-group-text">%</span>
+                    </div>
+                    <label class="form-label" for="motivoDesconto">Motivo (opcional)</label>
+                    <input type="text" id="motivoDesconto" class="form-control" maxlength="300">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Voltar</button>
+                    <button type="submit" class="btn btn-warning">Aplicar desconto</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalDetalhes" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalhes do pedido</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="detalhesCorpo"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="pedidos-app" th:data-perfil="${perfilLogado}"></div>
+
+    <script>
+    (function () {
+        const perfil = document.getElementById('pedidos-app').dataset.perfil;
+        const podeOperar = perfil === 'ATENDENTE' || perfil === 'GERENTE';
+        const ehGerente = perfil === 'GERENTE';
+
+        const ROTULOS = {
+            RECEBIDO: 'Recebido', EM_PREPARACAO: 'Em preparação', PRONTO: 'Pronto',
+            SAIU_PARA_ENTREGA: 'Saiu para entrega', RETIRADO: 'Retirado',
+            FINALIZADO: 'Finalizado', CANCELADO: 'Cancelado'
+        };
+        const CORES = {
+            RECEBIDO: 'bg-secondary', EM_PREPARACAO: 'bg-warning text-dark', PRONTO: 'bg-info text-dark',
+            SAIU_PARA_ENTREGA: 'bg-primary', RETIRADO: 'bg-primary', FINALIZADO: 'bg-success', CANCELADO: 'bg-danger'
+        };
+
+        const tabela = document.getElementById('pedidos-tabela');
+        let pedidos = [];
+        let produtos = [];
+        let pedidoSelecionado = null;
+
+        function mensagem(texto, tipo) {
+            const area = document.getElementById('pedidos-msg');
+            area.innerHTML = `<div class="alert alert-${tipo} alert-dismissible fade show">${esc(texto)}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button></div>`;
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        async function carregarPedidos() {
+            try {
+                pedidos = await apiFetch('/api/pedidos');
+                renderizar();
+            } catch (e) {
+                mensagem(e.message, 'danger');
+            }
+        }
+
+        function renderizar() {
+            if (pedidos.length === 0) {
+                tabela.innerHTML = `<tr><td colspan="8" class="text-center text-muted py-5">
+                    <i class="bi bi-inbox fs-3 d-block mb-2"></i>Nenhum pedido encontrado.</td></tr>`;
+                return;
+            }
+            tabela.innerHTML = pedidos.map(p => {
+                const itens = (p.itens || []).map(i => `${i.quantidade}x ${esc(i.nomeProduto)}`).join('<br>');
+                const desconto = Number(p.percentualDesconto) > 0
+                    ? `<br><small class="text-success">-${Number(p.percentualDesconto)}% (${formatarMoeda(p.valorDesconto)})</small>` : '';
+                const saida = p.dataHoraSaida
+                    ? `${formatarDataHora(p.dataHoraSaida)}<br><small class="text-muted">${esc(p.responsavelSaida)}</small>` : '—';
+
+                let acoes = `<button class="btn btn-sm btn-outline-dark me-1 mb-1" data-acao="detalhes" data-id="${esc(p.id)}">
+                                <i class="bi bi-eye"></i></button>`;
+                if (podeOperar) {
+                    (p.proximosStatus || []).forEach(s => {
+                        acoes += `<button class="btn btn-sm btn-outline-primary me-1 mb-1" data-acao="status" data-status="${s}" data-id="${esc(p.id)}">
+                                    → ${ROTULOS[s] || s}</button>`;
+                    });
+                }
+                if (ehGerente && p.podeAplicarDesconto) {
+                    acoes += `<button class="btn btn-sm btn-outline-warning me-1 mb-1" data-acao="desconto" data-id="${esc(p.id)}">
+                                <i class="bi bi-percent"></i> Desconto</button>`;
+                }
+                if (ehGerente && p.podeCancelar) {
+                    acoes += `<button class="btn btn-sm btn-outline-danger mb-1" data-acao="cancelar" data-id="${esc(p.id)}">
+                                <i class="bi bi-x-circle"></i> Cancelar</button>`;
+                }
+
+                return `<tr>
+                    <td class="ps-3 small text-muted">#${esc(String(p.id).slice(-6))}<br>${p.tipoEntrega === 'RETIRADA' ? 'Retirada' : 'Entrega'}</td>
+                    <td>${esc(p.clienteNome)}</td>
+                    <td class="small">${itens}</td>
+                    <td><strong>${formatarMoeda(p.valorTotal)}</strong>${desconto}</td>
+                    <td><span class="badge ${CORES[p.status] || 'bg-secondary'}">${esc(p.statusDescricao || p.status)}</span></td>
+                    <td class="small">${formatarDataHora(p.dataHoraEntrada)}<br><span class="text-muted">${esc(p.responsavelEntrada)}</span></td>
+                    <td class="small">${saida}</td>
+                    <td class="text-end pe-3">${acoes}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        tabela.addEventListener('click', async (ev) => {
+            const btn = ev.target.closest('[data-acao]');
+            if (!btn) return;
+            pedidoSelecionado = pedidos.find(p => p.id === btn.dataset.id);
+            const acao = btn.dataset.acao;
+
+            if (acao === 'status') {
+                const novo = btn.dataset.status;
+                if (!confirm(`Alterar o status para "${ROTULOS[novo]}"?`)) return;
+                try {
+                    await apiFetch(`/api/pedidos/${encodeURIComponent(pedidoSelecionado.id)}/status?status=${novo}`, { method: 'PUT' });
+                    mensagem(`Status alterado para ${ROTULOS[novo]}.`, 'success');
+                    carregarPedidos();
+                } catch (e) { mensagem(e.message, 'danger'); }
+            } else if (acao === 'cancelar') {
+                document.getElementById('justificativa').value = '';
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('modalCancelar')).show();
+            } else if (acao === 'desconto') {
+                document.getElementById('percentual').value = '';
+                document.getElementById('motivoDesconto').value = '';
+                bootstrap.Modal.getOrCreateInstance(document.getElementById('modalDesconto')).show();
+            } else if (acao === 'detalhes') {
+                mostrarDetalhes(pedidoSelecionado);
+            }
+        });
+
+        document.getElementById('formCancelar').addEventListener('submit', async (ev) => {
+            ev.preventDefault();
+            try {
+                await apiFetch(`/api/pedidos/${encodeURIComponent(pedidoSelecionado.id)}/cancelar`, {
+                    method: 'POST', body: { justificativa: document.getElementById('justificativa').value }
+                });
+                bootstrap.Modal.getInstance(document.getElementById('modalCancelar')).hide();
+                mensagem('Pedido cancelado e registrado na auditoria.', 'success');
+                carregarPedidos();
+            } catch (e) { alert(e.message); }
+        });
+
+        document.getElementById('formDesconto').addEventListener('submit', async (ev) => {
+            ev.preventDefault();
+            try {
+                await apiFetch(`/api/pedidos/${encodeURIComponent(pedidoSelecionado.id)}/desconto`, {
+                    method: 'POST',
+                    body: {
+                        percentual: document.getElementById('percentual').value,
+                        motivo: document.getElementById('motivoDesconto').value
+                    }
+                });
+                bootstrap.Modal.getInstance(document.getElementById('modalDesconto')).hide();
+                mensagem('Desconto aplicado e registrado na auditoria.', 'success');
+                carregarPedidos();
+            } catch (e) { alert(e.message); }
+        });
+
+        function mostrarDetalhes(p) {
+            const hist = (p.historico || []).map(h =>
+                `<li>${formatarDataHora(h.dataHora)} — <strong>${ROTULOS[h.status] || h.status}</strong> por ${esc(h.usuario)}</li>`).join('');
+            const itens = (p.itens || []).map(i =>
+                `<tr><td>${esc(i.nomeProduto)}</td><td>${i.quantidade}</td><td>${formatarMoeda(i.precoUnitario)}</td><td>${formatarMoeda(i.subtotal)}</td></tr>`).join('');
+            let cancel = '';
+            if (p.status === 'CANCELADO') {
+                cancel = `<div class="alert alert-danger"><strong>Cancelado</strong> em ${formatarDataHora(p.dataHoraCancelamento)}
+                          por ${esc(p.responsavelCancelamento)}<br>Justificativa: ${esc(p.justificativaCancelamento)}</div>`;
+            }
+            document.getElementById('detalhesCorpo').innerHTML = `
+                ${cancel}
+                <p class="small text-muted mb-1">ID: <code>${esc(p.id)}</code></p>
+                <p><strong>Cliente:</strong> ${esc(p.clienteNome)} · <strong>Tipo:</strong> ${p.tipoEntrega === 'RETIRADA' ? 'Retirada' : 'Entrega'}
+                   ${p.observacao ? '<br><strong>Obs.:</strong> ' + esc(p.observacao) : ''}</p>
+                <table class="table table-sm"><thead><tr><th>Produto</th><th>Qtd</th><th>Preço</th><th>Subtotal</th></tr></thead>
+                    <tbody>${itens}</tbody></table>
+                <p class="text-end">Subtotal: ${formatarMoeda(p.subtotal)}<br>
+                   Desconto (${Number(p.percentualDesconto || 0)}%): -${formatarMoeda(p.valorDesconto)}
+                   ${p.descontoAplicadoPor ? '<small class="text-muted"> por ' + esc(p.descontoAplicadoPor) + '</small>' : ''}<br>
+                   <strong>Total: ${formatarMoeda(p.valorTotal)}</strong></p>
+                <p><strong>Entrada:</strong> ${formatarDataHora(p.dataHoraEntrada)} por ${esc(p.responsavelEntrada)}<br>
+                   <strong>Saída:</strong> ${p.dataHoraSaida ? formatarDataHora(p.dataHoraSaida) + ' por ' + esc(p.responsavelSaida) : '—'}<br>
+                   <strong>Finalização:</strong> ${p.dataHoraFinalizacao ? formatarDataHora(p.dataHoraFinalizacao) + ' por ' + esc(p.responsavelFinalizacao) : '—'}</p>
+                <h6>Histórico de status</h6><ul class="small">${hist}</ul>`;
+            bootstrap.Modal.getOrCreateInstance(document.getElementById('modalDetalhes')).show();
+        }
+
+        const card = document.getElementById('cardNovoPedido');
+        const itensDiv = document.getElementById('itensPedido');
+
+        function linhaItem() {
+            const div = document.createElement('div');
+            div.className = 'row g-2 mb-2 item-linha';
+            const opcoes = produtos.map(pr =>
+                `<option value="${esc(pr.id)}" data-preco="${pr.preco}">${esc(pr.nome)} — ${formatarMoeda(pr.preco)}</option>`).join('');
+            div.innerHTML = `
+                <div class="col-7"><select class="form-select item-produto" required>${opcoes}</select></div>
+                <div class="col-3"><input type="number" class="form-control item-qtd" min="1" max="50" value="1" required></div>
+                <div class="col-2"><button type="button" class="btn btn-outline-danger w-100 item-remover"><i class="bi bi-trash"></i></button></div>`;
+            itensDiv.appendChild(div);
+            atualizarEstimativa();
+        }
+
+        function atualizarEstimativa() {
+            let total = 0;
+            itensDiv.querySelectorAll('.item-linha').forEach(l => {
+                const sel = l.querySelector('.item-produto');
+                const preco = Number(sel.selectedOptions[0]?.dataset.preco || 0);
+                total += preco * Number(l.querySelector('.item-qtd').value || 0);
+            });
+            document.getElementById('estimativa').textContent = formatarMoeda(total);
+        }
+
+        if (podeOperar) {
+            document.getElementById('btnNovoPedido').addEventListener('click', async () => {
+                try {
+                    const [clientes, todosProdutos] = await Promise.all([apiFetch('/api/clientes'), apiFetch('/api/produtos')]);
+                    produtos = todosProdutos.filter(p => p.ativo !== false);
+                    document.getElementById('clienteId').innerHTML =
+                        '<option value="" disabled selected>Selecione o cliente</option>' +
+                        clientes.map(c => `<option value="${esc(c.id)}">${esc(c.nome)} — ${esc(c.telefone)}</option>`).join('');
+                    itensDiv.innerHTML = '';
+                    linhaItem();
+                    card.classList.remove('d-none');
+                } catch (e) { mensagem(e.message, 'danger'); }
+            });
+            document.getElementById('btnCancelarForm').addEventListener('click', () => card.classList.add('d-none'));
+            document.getElementById('btnAddItem').addEventListener('click', linhaItem);
+            itensDiv.addEventListener('input', atualizarEstimativa);
+            itensDiv.addEventListener('change', atualizarEstimativa);
+            itensDiv.addEventListener('click', (ev) => {
+                if (ev.target.closest('.item-remover') && itensDiv.children.length > 1) {
+                    ev.target.closest('.item-linha').remove();
+                    atualizarEstimativa();
+                }
+            });
+
+            document.getElementById('formPedido').addEventListener('submit', async (ev) => {
+                ev.preventDefault();
+
+                const itens = [...itensDiv.querySelectorAll('.item-linha')].map(l => ({
+                    produtoId: l.querySelector('.item-produto').value,
+                    quantidade: Number(l.querySelector('.item-qtd').value)
+                }));
+                try {
+                    await apiFetch('/api/pedidos', {
+                        method: 'POST',
+                        body: {
+                            clienteId: document.getElementById('clienteId').value,
+                            tipoEntrega: document.querySelector('input[name="tipoEntrega"]:checked').value,
+                            observacao: document.getElementById('observacao').value,
+                            itens
+                        }
+                    });
+                    card.classList.add('d-none');
+                    document.getElementById('formPedido').reset();
+                    mensagem('Pedido registrado (status RECEBIDO).', 'success');
+                    carregarPedidos();
+                } catch (e) { mensagem(e.message, 'danger'); }
+            });
+        }
+
+        carregarPedidos();
+    })();
+    </script>
+</div>
+
+</body>
+</html>

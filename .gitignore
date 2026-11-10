@@ -1,0 +1,9 @@
+/target/
+/nbproject/private/
+nb-configuration.xml
+.idea/
+*.iml
+.vscode/
+.DS_Store
+*.log
+.env
