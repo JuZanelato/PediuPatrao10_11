@@ -5,8 +5,7 @@ descontos e cancelamentos exclusivos do gerente e auditoria persistente no Mongo
 
 **Tecnologias:** Java 21 · Spring Boot 3.4 · Spring Security 6 · Spring Data MongoDB (Atlas) · Thymeleaf · Maven
 
-> Aluno(a): _seu nome completo_ — RGM: _seu RGM_
-> Vídeo de demonstração: _cole aqui o link do vídeo_
+> Aluno(a): Juliana Ferreira Zanelato
 
 ---
 
