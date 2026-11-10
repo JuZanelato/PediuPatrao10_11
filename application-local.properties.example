@@ -1,0 +1,3 @@
+# Copie este arquivo para application-local.properties (na mesma pasta do pom.xml)
+# e preencha com o endereço do seu banco. O arquivo copiado não é enviado ao GitHub.
+MONGODB_URI=mongodb+srv://USUARIO:SENHA@SEU-CLUSTER.mongodb.net/?retryWrites=true&w=majority
