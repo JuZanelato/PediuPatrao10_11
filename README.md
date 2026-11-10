@@ -168,3 +168,8 @@ Códigos de resposta: `401` sem login · `403` sem permissão ou sem token CSRF 
 5. Login como **admin**: gerenciar usuários/perfis, tentar alterar o próprio perfil → bloqueado; tentar aplicar desconto
    via API → **403**.
 6. Abrir **Auditoria** e mostrar os registros gerados durante o vídeo (inclusive os `ACESSO_NEGADO`).
+
+## Dashboard administrativo
+
+Painel de acompanhamento de vendas e pedidos em `/dashboard` (perfis ADMIN e GERENTE), alimentado pela API `/api/dashboard`.
+Requisitos, documentação dos endpoints e testes: [docs/dashboard-administrativo.md](docs/dashboard-administrativo.md) (também em [Word](docs/dashboard-administrativo.docx)).
