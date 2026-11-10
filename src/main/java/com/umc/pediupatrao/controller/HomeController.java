@@ -114,6 +114,12 @@ public class HomeController {
         return "layout";
     }
 
+    @GetMapping("/dashboard")
+    public String dashboard(Model model) {
+        model.addAttribute("content", "dashboard :: content");
+        return "layout";
+    }
+
     @GetMapping("/pedidos")
     public String pedidos(Model model) {
         model.addAttribute("content", "pedidos :: content");

@@ -8,6 +8,7 @@ import java.util.Set;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.annotation.Version;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 import org.springframework.data.mongodb.core.mapping.FieldType;
@@ -46,6 +47,7 @@ public class Pedido {
     private StatusPedido status;
     private List<HistoricoStatus> historico = new ArrayList<>();
 
+    @Indexed
     private LocalDateTime dataHoraEntrada;
     private String responsavelEntrada;
 

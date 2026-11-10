@@ -93,6 +93,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/produtos", "/api/produtos", "/api/produtos/*").authenticated()
                         .requestMatchers("/produtos/**", "/api/produtos/**").hasAnyRole(ADMIN, GERENTE)
 
+                        .requestMatchers(HttpMethod.GET, "/dashboard", "/api/dashboard/**").hasAnyRole(ADMIN, GERENTE)
+                        .requestMatchers("/dashboard/**", "/api/dashboard/**").denyAll()
+
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
