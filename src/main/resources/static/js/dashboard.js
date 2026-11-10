@@ -100,12 +100,13 @@
         graficos[id] = new Chart(el(id).getContext('2d'), config);
     }
 
-    const eixoMoeda = {
+    // Função (e não objeto compartilhado) porque o Chart.js altera a configuração de eixo que recebe.
+    const eixoMoeda = (extra) => Object.assign({
         ticks: {
             beginAtZero: true,
             callback: (v) => 'R$ ' + Number(v).toLocaleString('pt-BR', { maximumFractionDigits: 0 })
         }
-    };
+    }, extra || {});
 
     // ------------------------------------------------------------------ renderização
 
@@ -168,7 +169,7 @@
                 scales: {
                     xAxes: [{ gridLines: { display: false } }],
                     yAxes: [
-                        Object.assign({ id: 'valor', position: 'left' }, eixoMoeda),
+                        eixoMoeda({ id: 'valor', position: 'left' }),
                         { id: 'pedidos', position: 'right', gridLines: { drawOnChartArea: false },
                           ticks: { beginAtZero: true, precision: 0 } }
                     ]
@@ -251,7 +252,7 @@
                     }
                 },
                 scales: {
-                    xAxes: [eixoMoeda],
+                    xAxes: [eixoMoeda()],
                     yAxes: [{ gridLines: { display: false } }]
                 }
             }
