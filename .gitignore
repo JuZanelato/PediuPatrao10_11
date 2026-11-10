@@ -7,3 +7,6 @@ nb-configuration.xml
 .DS_Store
 *.log
 .env
+
+# Configuração local com credenciais
+application-local.properties

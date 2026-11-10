@@ -63,3 +63,45 @@ body {
         cursor: pointer;
     }
 }
+/* ---------- Dashboard administrativo ---------- */
+main {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.dashboard .kpi .kpi-titulo {
+    font-size: .8rem;
+    text-transform: uppercase;
+    letter-spacing: .03em;
+    color: #6c757d;
+}
+
+.dashboard .kpi .kpi-valor {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: .25rem 0;
+    font-variant-numeric: tabular-nums;
+}
+
+.dashboard .kpi .kpi-detalhe {
+    font-size: .8rem;
+    color: #6c757d;
+}
+
+.dashboard .grafico-area {
+    position: relative;
+    height: 280px;
+}
+
+.dashboard .status-ponto {
+    display: inline-block;
+    width: .6rem;
+    height: .6rem;
+    border-radius: 50%;
+    margin-right: .4rem;
+}
+
+.dashboard td,
+.dashboard .text-end {
+    font-variant-numeric: tabular-nums;
+}
